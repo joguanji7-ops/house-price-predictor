@@ -3,56 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Currency House Price Predictor</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Advanced AI House Price Predictor</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            max-width: 500px;
+            width: 100%;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #e7f4e4;
+            border-left: 5px solid #4CAF50;
+            border-radius: 4px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            color: #2e7d32;
+        }
+    </style>
 </head>
 <body>
-    <div class="card">
-        <h2>🏡 House Price Predictor</h2>
-        <p class="subtitle">Enter property details and choose currency</p>
-        
-        <form method="POST" action="/">
-            <div class="input-group">
-                <label>Size (Square Feet)</label>
-                <input type="number" name="sqft" placeholder="e.g. 1800" required min="500">
-            </div>
-            
-            <div class="input-group">
-                <label>Bedrooms</label>
-                <input type="number" name="bedrooms" placeholder="e.g. 3" required min="1">
-            </div>
-            
-            <div class="input-group">
-                <label>Bathrooms</label>
-                <input type="number" name="bathrooms" placeholder="e.g. 2" required min="1">
-            </div>
 
-            <div class="input-group">
-                <label>Preferred Currency</label>
-                <select name="currency" required>
-                    <option value="USD">USD ($) - US Dollar</option>
-                    <option value="INR">INR (₹) - Indian Rupee</option>
-                    <option value="EUR">EUR (€) - Euro</option>
-                    <option value="GBP">GBP (£) - British Pound</option>
-                    <option value="CAD">CAD (CA$) - Canadian Dollar</option>
-                    <option value="AUD">AUD (A$) - Australian Dollar</option>
-                    <option value="JPY">JPY (¥) - Japanese Yen</option>
-                </select>
-            </div>
-            
-            <button type="submit">Calculate Value</button>
-        </form>
+<div class="container">
+    <h2>🏡 House Price Predictor</h2>
+    
+    <form action="/predict" method="POST">
+        <label for="square_feet">Total Area (Square Feet):</label>
+        <input type="number" id="square_feet" name="square_feet" placeholder="e.g. 1500" required>
 
-        {% if prediction %}
-            <div class="result-box">
-                <h3>Estimated Market Value:</h3>
-                <p class="price">{{ prediction }}</p>
-            </div>
-        {% endif %}
-         <div class="footer">
-    <p>Developed by JOGU ANJI</p>
+        <label for="bedrooms">Bedrooms:</label>
+        <input type="number" id="bedrooms" name="bedrooms" placeholder="e.g. 3" required>
+
+        <label for="bathrooms">Bathrooms:</label>
+        <input type="number" id="bathrooms" name="bathrooms" placeholder="e.g. 2" required>
+
+        <label for="country">Country:</label>
+        <select id="country" name="country" required onchange="updateStates()">
+            <option value="">-- Select Country --</option>
+            <option value="India">India</option>
+            <option value="USA">USA</option>
+        </select>
+
+        <label for="state">State:</label>
+        <select id="state" name="state" required onchange="updateDistricts()">
+            <option value="">-- Select State --</option>
+        </select>
+
+        <label for="district">District:</label>
+        <select id="district" name="district" required>
+            <option value="">-- Select District --</option>
+        </select>
+
+        <label for="currency">Display Currency:</label>
+        <select id="currency" name="currency">
+            <option value="INR">INR (₹)</option>
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+        </select>
+
+        <button type="submit">Predict Market Value</button>
+    </form>
+
+    {% if prediction_text %}
+        <div class="result">
+            {{ prediction_text }}
+        </div>
+    {% endif %}
 </div>
-    </div>
-   
+
+<script>
+const locationData = {
+    "India": {
+        "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Khammam", "Nirmal"],
+        "Andhra_Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Tirupati"],
+        "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Thane"],
+        "Karnataka": ["Bangalore", "Mysore", "Hubli", "Mangalore"],
+        "Delhi": ["New Delhi", "Dwarka", "Rohini", "South Delhi"],
+        "Tamil_Nadu": ["Chennai", "Coimbatore", "Madurai", "Salem"]
+    },
+    "USA": {
+        "California": ["Los Angeles", "San Francisco", "San Diego", "San Jose"],
+        "Texas": ["Houston", "Austin", "Dallas", "San Antonio"],
+        "New_York": ["New York City", "Buffalo", "Rochester", "Yonkers"],
+        "Florida": ["Miami", "Orlando", "Tampa", "Jacksonville"]
+    }
+};
+
+function updateStates() {
+    const countrySelect = document.getElementById("country");
+    const stateSelect = document.getElementById("state");
+    const districtSelect = document.getElementById("district");
+    
+    const selectedCountry = countrySelect.value;
+    
+    // Clear out previous options
+    stateSelect.innerHTML = '<option value="">-- Select State --</option>';
+    districtSelect.innerHTML = '<option value="">-- Select District --</option>';
+    
+    if (selectedCountry && locationData[selectedCountry]) {
+        Object.keys(locationData[selectedCountry]).forEach(state => {
+            let option = document.createElement("option");
+            option.value = state;
+            option.textContent = state.replace("_", " "); // Cleaner display text
+            stateSelect.appendChild(option);
+        });
+    }
+}
+
+function updateDistricts() {
+    const countrySelect = document.getElementById("country");
+    const stateSelect = document.getElementById("state");
+    const districtSelect = document.getElementById("district");
+    
+    const selectedCountry = countrySelect.value;
+    const selectedState = stateSelect.value;
+    
+    districtSelect.innerHTML = '<option value="">-- Select District --</option>';
+    
+    if (selectedCountry && selectedState && locationData[selectedCountry][selectedState]) {
+        locationData[selectedCountry][selectedState].forEach(district => {
+            let option = document.createElement("option");
+            option.value = district;
+            option.textContent = district;
+            districtSelect.appendChild(option);
+        });
+    }
+}
+</script>
+
 </body>
 </html>
